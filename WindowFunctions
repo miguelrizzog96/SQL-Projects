@@ -1,0 +1,36 @@
+--Retrieve list of the two youngest drivers by nationality
+WITH cte_1 AS (
+SELECT FORENAME|| ' ' || SURNAME AS name,
+TO_CHAR(DOB, 'DD-MM-YYYY') AS Date_Birth,NATIONALITY,
+ROW_NUMBER() OVER w as n --(PARTITION BY NATIONALITY ORDER BY DOB DESC)
+FROM DRIVERS
+WHERE NATIONALITY NOT LIKE ('%-%')
+WINDOW w AS (PARTITION BY NATIONALITY ORDER BY DOB DESC) -- TWO WAYS: with WINDOW or W/O
+ORDER BY NATIONALITY,DOB DESC)
+SELECT * 
+FROM cte_1
+WHERE n<=2;
+
+-- DRIVERS that are younger than me
+SELECT FORENAME|| ' ' || SURNAME AS name,
+TO_CHAR(DOB, 'DD-MM-YYYY') AS Date_Birth
+FROM DRIVERS
+WHERE DOB> '31-10-1996';
+
+--Rank and Dense_Rank
+--RANK(): The focus is on the number of values we have in our output
+--DENSE_RANK(): The focus is on the ranking of the values itself
+
+-- Create a query that will extract the employee number, the department in which they work
+--their current salary and the all time average salary for that employee
+SELECT t1.EMP_NO,DATE_LAST_CONTRACT, CURR_SALARY,ROUND(AVG_SALARY_LIFETIME) as AVG_SALARY_LIFETIME
+FROM (SELECT
+    EMP_NO,TO_DATE,
+    SALARY as CURR_SALARY,
+    FROM_DATE as date_last_contract,
+    AVG(SALARY) OVER (PARTITION BY EMP_NO) as avg_salary_lifetime
+FROM SALARIES )t1
+JOIN
+(SELECT MAX(FROM_DATE)as last_contract,EMP_NO FROM SALARIES
+GROUP BY EMP_NO) t2 ON t1.date_last_contract=t2.last_contract AND t1.date_last_contract=t2.last_contract
+WHERE Date_last_COntract BETWEEN '01-01-2000' AND '01-01-2002';
